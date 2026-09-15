@@ -19,8 +19,13 @@
       background: rgba(0,0,0,0.85); padding: 8px 14px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 4px;
     }
 
+    #flashlight-status {
+      position: absolute; top: 60px; left: 20px; font-size: 12px; color: #38bdf8; z-index: 10;
+      background: rgba(0,0,0,0.7); padding: 4px 8px; border-radius: 4px;
+    }
+
     #geiger-hud {
-      position: absolute; top: 60px; left: 20px; font-size: 13px; color: #facc15; z-index: 10;
+      position: absolute; top: 90px; left: 20px; font-size: 13px; color: #facc15; z-index: 10;
       background: rgba(0,0,0,0.85); padding: 6px 12px; border-radius: 4px; display: none;
     }
 
@@ -81,6 +86,7 @@
 <div id="canvas-container"></div>
 <div id="crosshair"></div>
 <div id="hud-info">CAPÍTULO 1: Hospital Desierto</div>
+<div id="flashlight-status">Linterna: ON [F]</div>
 <div id="geiger-hud">RAD/EMF: 0.02 mSv/h</div>
 <div id="interaction-hint">Presiona [E] para interactuar</div>
 <div id="static-overlay"></div>
@@ -91,22 +97,22 @@
 
 <div id="start-screen">
   <h1 style="color:#ef4444; font-size: 36px; margin-bottom: 10px;">BACKROOMS: SAGA COMPLETA</h1>
-  <p style="color:#a1a1aa; max-width: 520px; line-height: 1.5;">Atraviesa los 6 capítulos: el hospital desierto, el visor del investigador, el laboratorio Async, la carrera roja, la ciudad vacía y la convergencia final.</p>
+  <p style="color:#a1a1aa; max-width: 520px; line-height: 1.5;">Atraviesa los 6 capítulos. Usa [WASD] para moverte, [F] para encender/apagar la linterna y [E] para interactuar.</p>
   <button class="btn" onclick="startGame()">INICIAR SAGA</button>
 </div>
 
 <script>
-  let scene, camera, renderer, controls, flashlight, ambientLight;
+  let scene, camera, renderer, controls, flashlight, ambientLight, emergencyRedLight;
   let moveFwd = false, moveBwd = false, moveLft = false, moveRgt = false;
   let prevTime = performance.now();
   const velocity = new THREE.Vector3(), direction = new THREE.Vector3();
 
   let chapter = 1;
   let inCinematic = false;
-  let interactTarget = null;
+  let flashlightOn = true;
 
-  // Objetos dinámicos por capítulo
-  let doorNivel6, doorNivel1000, finalPortal, hazmatDoor, geigerTerminal, runTrigger, cityTarget, mirrorObject;
+  // Objetos dinámicos
+  let finalPortal, hazmatDoor, geigerTerminal, runTrigger, cityTarget, mirrorObject;
   let invisibleEntityPos = new THREE.Vector3(0, 0, 15);
   let redLightPulse = 0;
 
@@ -121,10 +127,10 @@
 
     controls = new THREE.PointerLockControls(camera, document.body);
 
-    ambientLight = new THREE.AmbientLight(0xffffff, 0.05);
+    ambientLight = new THREE.AmbientLight(0xffffff, 0.15);
     scene.add(ambientLight);
 
-    flashlight = new THREE.SpotLight(0xffffff, 2.5, 18, Math.PI / 5, 0.4, 1);
+    flashlight = new THREE.SpotLight(0xffffff, 3.0, 20, Math.PI / 4, 0.3, 1);
     flashlight.position.set(0.2, -0.2, 0);
     camera.add(flashlight);
     flashlight.target.position.set(0, -0.2, -5);
@@ -143,6 +149,14 @@
     showSubtitle("¿Hola...? ¿Por qué el hospital está tan vacío?", 3500);
   }
 
+  function toggleFlashlight() {
+    flashlightOn = !flashlightOn;
+    flashlight.intensity = flashlightOn ? 3.0 : 0;
+    const statusText = document.getElementById('flashlight-status');
+    statusText.textContent = flashlightOn ? "Linterna: ON [F]" : "Linterna: OFF [F]";
+    statusText.style.color = flashlightOn ? "#38bdf8" : "#64748b";
+  }
+
   function setupControls() {
     document.addEventListener('keydown', (e) => {
       if (inCinematic) return;
@@ -150,6 +164,7 @@
       if (e.code === 'KeyS') moveBwd = true;
       if (e.code === 'KeyA') moveLft = true;
       if (e.code === 'KeyD') moveRgt = true;
+      if (e.code === 'KeyF') toggleFlashlight();
       if (e.code === 'KeyE') interact();
     });
     document.addEventListener('keyup', (e) => {
@@ -164,6 +179,8 @@
     while(scene.children.length > 0){ scene.remove(scene.children[0]); }
     scene.add(camera);
     scene.add(ambientLight);
+    ambientLight.color.setHex(0xffffff);
+    ambientLight.intensity = 0.15;
   }
 
   function transitionTo(nextChapterFunc) {
@@ -179,16 +196,16 @@
   // --- CAPÍTULO 1: HOSPITAL ---
   function loadChapter1() {
     clearScene(); chapter = 1;
-    scene.background = new THREE.Color(0x050508);
-    scene.fog = new THREE.FogExp2(0x050508, 0.06);
+    scene.background = new THREE.Color(0x0a0a0f);
+    scene.fog = new THREE.FogExp2(0x0a0a0f, 0.05);
 
     document.getElementById('hud-info').textContent = "CAPÍTULO 1: Hospital Desierto";
     document.getElementById('hud-info').style.color = "#ef4444";
     document.getElementById('vhs-overlay').style.display = 'none';
     document.getElementById('vhs-cam-info').style.display = 'none';
 
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0x1e293b });
-    const floorMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.3 });
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.6 });
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.3 });
 
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(8, 50), floorMat);
     floor.rotation.x = -Math.PI / 2; floor.position.set(0, 0, -15);
@@ -215,7 +232,7 @@
   function loadChapter2() {
     clearScene(); chapter = 2;
     scene.background = new THREE.Color(0x1c1917);
-    scene.fog = new THREE.FogExp2(0x1c1917, 0.05);
+    scene.fog = new THREE.FogExp2(0x1c1917, 0.04);
 
     document.getElementById('vhs-overlay').style.display = 'block';
     document.getElementById('vhs-cam-info').style.display = 'block';
@@ -244,12 +261,12 @@
   function loadChapter3() {
     clearScene(); chapter = 3;
     scene.background = new THREE.Color(0x020617);
-    scene.fog = new THREE.FogExp2(0x020617, 0.08);
+    scene.fog = new THREE.FogExp2(0x020617, 0.06);
 
     document.getElementById('hud-info').textContent = "CAPÍTULO 3: Laboratorio de Brechas";
     document.getElementById('geiger-hud').style.display = 'block';
 
-    const metalMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.6, roughness: 0.4 });
+    const metalMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.5, roughness: 0.4 });
     const room = new THREE.Mesh(new THREE.BoxGeometry(20, 5, 20), metalMat);
     room.position.set(0, 2.5, 0);
     scene.add(room);
@@ -260,30 +277,46 @@
 
     camera.position.set(0, 1.6, 7);
     camera.rotation.set(0,0,0);
-    showSubtitle("Usa el detector Geiger. Encuentra el servidor de la brecha.", 4000, "#facc15");
+    showSubtitle("Usa el detector Geiger. Encuentra la terminal de la brecha.", 4000, "#facc15");
   }
 
-  // --- CAPÍTULO 4: NIVEL ¡CORRE! ---
+  // --- CAPÍTULO 4: NIVEL ¡CORRE! (Ajustada la visibilidad) ---
   function loadChapter4() {
     clearScene(); chapter = 4;
     document.getElementById('geiger-hud').style.display = 'none';
-    scene.background = new THREE.Color(0x450a0a);
-    scene.fog = new THREE.FogExp2(0x450a0a, 0.03);
+    
+    // Iluminación ambiental roja visible sin oscurecer a negro
+    ambientLight.color.setHex(0xff2222);
+    ambientLight.intensity = 0.4;
+
+    scene.background = new THREE.Color(0x2a0404);
+    scene.fog = new THREE.FogExp2(0x2a0404, 0.02);
 
     document.getElementById('hud-info').textContent = "CAPÍTULO 4: ¡CORRE! (Level !)";
     document.getElementById('hud-info').style.color = "#dc2626";
 
-    const redCorridor = new THREE.Mesh(new THREE.BoxGeometry(6, 4, 80), new THREE.MeshStandardMaterial({ color: 0x991b1b }));
-    redCorridor.position.set(0, 2, -35);
-    scene.add(redCorridor);
+    // Texturas claras para ver paredes
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.5 });
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0x450a0a, roughness: 0.3 });
 
-    runTrigger = new THREE.Mesh(new THREE.BoxGeometry(6, 4, 1), new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.3 }));
+    const corridor = new THREE.Mesh(new THREE.BoxGeometry(8, 4, 80), [
+      wallMat, wallMat, wallMat, wallMat, wallMat, floorMat
+    ]);
+    corridor.position.set(0, 2, -35);
+    scene.add(corridor);
+
+    // Luz roja de alarma en el techo
+    emergencyRedLight = new THREE.PointLight(0xff0000, 4.0, 30);
+    emergencyRedLight.position.set(0, 3.5, -20);
+    scene.add(emergencyRedLight);
+
+    runTrigger = new THREE.Mesh(new THREE.BoxGeometry(8, 4, 1), new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.4 }));
     runTrigger.position.set(0, 2, -70);
     scene.add(runTrigger);
 
     camera.position.set(0, 1.6, 2);
     camera.rotation.set(0,0,0);
-    showSubtitle("¡ALARMA DE CONTENCIÓN! ¡CORRE HACIA EL FONDO!", 4000, "#ef4444");
+    showSubtitle("¡ALARMA DE CONTENCIÓN! ¡CORRE HACIA EL FONDO DEL PASILLO!", 4000, "#ef4444");
   }
 
   // --- CAPÍTULO 5: LA CIUDAD DESIERTA ---
@@ -295,37 +328,35 @@
     document.getElementById('hud-info').textContent = "CAPÍTULO 5: La Ciudad Vacía (Nivel 11)";
     document.getElementById('hud-info').style.color = "#38bdf8";
 
-    // Suelo de asfalto extenso
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), new THREE.MeshStandardMaterial({ color: 0x111827 }));
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), new THREE.MeshStandardMaterial({ color: 0x1f2937 }));
     ground.rotation.x = -Math.PI / 2;
     scene.add(ground);
 
-    // Edificios oscuros
     for(let i=0; i<25; i++) {
-      const b = new THREE.Mesh(new THREE.BoxGeometry(8 + Math.random()*6, 15 + Math.random()*20, 8 + Math.random()*6), new THREE.MeshStandardMaterial({ color: 0x1f2937 }));
+      const b = new THREE.Mesh(new THREE.BoxGeometry(8 + Math.random()*6, 15 + Math.random()*20, 8 + Math.random()*6), new THREE.MeshStandardMaterial({ color: 0x374151 }));
       b.position.set((Math.random()-0.5)*90, b.geometry.parameters.height/2, (Math.random()-0.5)*90);
       scene.add(b);
     }
 
-    cityTarget = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 10, 16), new THREE.MeshBasicMaterial({ color: 0xf59e0b }));
-    cityTarget.position.set(0, 5, -40);
+    cityTarget = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 12, 16), new THREE.MeshBasicMaterial({ color: 0xf59e0b }));
+    cityTarget.position.set(0, 6, -40);
     scene.add(cityTarget);
 
     camera.position.set(0, 1.6, 30);
     camera.rotation.set(0,0,0);
-    showSubtitle("Una metrópolis sin alma... Busca la torre de transmisión de luz.", 4500, "#38bdf8");
+    showSubtitle("Una metrópolis desierta... Dirígete hacia la torre iluminada.", 4500, "#38bdf8");
   }
 
   // --- CAPÍTULO 6: LA CONVERGENCIA ---
   function loadChapter6() {
     clearScene(); chapter = 6;
     scene.background = new THREE.Color(0x000000);
-    scene.fog = new THREE.FogExp2(0x000000, 0.05);
+    scene.fog = new THREE.FogExp2(0x000000, 0.04);
 
     document.getElementById('hud-info').textContent = "CAPÍTULO 6: La Convergencia (Bucle)";
     document.getElementById('hud-info').style.color = "#f43f5e";
 
-    const roomMat = new THREE.MeshStandardMaterial({ color: 0x27272a, metalness: 0.8, roughness: 0.2 });
+    const roomMat = new THREE.MeshStandardMaterial({ color: 0x3f3f46, metalness: 0.5, roughness: 0.2 });
     const mirrorRoom = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 10), roomMat);
     mirrorRoom.position.set(0, 2, 0);
     scene.add(mirrorRoom);
@@ -336,7 +367,7 @@
 
     camera.position.set(0, 1.6, 3);
     camera.rotation.set(0,0,0);
-    showSubtitle("Investigador y Paciente... siempre fueron la misma persona atrapada en la grabación.", 6000, "#f43f5e");
+    showSubtitle("Investigador y Paciente... siempre fueron la misma persona en el bucle.", 6000, "#f43f5e");
   }
 
   // --- INTERACCIONES ---
@@ -346,7 +377,7 @@
     } else if (chapter === 3 && camera.position.distanceTo(geigerTerminal.position) < 3.5) {
       transitionTo(loadChapter4);
     } else if (chapter === 6 && camera.position.distanceTo(mirrorObject.position) < 3.0) {
-      showSubtitle("FIN DE LA SAGA. Has cerrado el bucle.", 10000, "#22c55e");
+      showSubtitle("FIN DE LA SAGA. Has cerrado el bucle infinito.", 10000, "#22c55e");
     }
   }
 
@@ -363,7 +394,7 @@
     const delta = (time - prevTime) / 1000;
 
     if (controls.isLocked && !inCinematic) {
-      let speedMult = (chapter === 4) ? 38.0 : 20.0; // Correr más rápido en Nivel !
+      let speedMult = (chapter === 4) ? 36.0 : 20.0; 
 
       velocity.x -= velocity.x * 10.0 * delta;
       velocity.z -= velocity.z * 10.0 * delta;
@@ -399,11 +430,13 @@
         document.getElementById('interaction-hint').style.display = distToTerm < 3.5 ? 'block' : 'none';
       }
       else if (chapter === 4) {
-        redLightPulse += delta * 8;
-        flashlight.color.setHSL(0, 1, 0.2 + Math.sin(redLightPulse)*0.2);
+        // Parpadeo de la luz roja de emergencia
+        redLightPulse += delta * 6;
+        if (emergencyRedLight) {
+          emergencyRedLight.intensity = 2.0 + Math.sin(redLightPulse) * 2.0;
+        }
 
         if (camera.position.distanceTo(runTrigger.position) < 3.0) {
-          flashlight.color.setHex(0xffffff);
           transitionTo(loadChapter5);
         }
       }
