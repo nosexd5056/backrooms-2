@@ -57,7 +57,7 @@
     #start-screen {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
       background: #050505; display: flex; flex-direction: column; justify-content: center; align-items: center;
-      z-index: 40; text-align: center; padding: 20px;
+      z-index: 50; text-align: center; padding: 20px;
     }
 
     .btn {
@@ -70,19 +70,19 @@
     #subtitles {
       position: fixed; bottom: 10%; left: 50%; transform: translateX(-50%);
       background: rgba(0, 0, 0, 0.85); color: #fff; padding: 10px 20px; font-size: 16px;
-      border-radius: 4px; display: none; z-index: 30; border: 1px solid rgba(255,255,255,0.2); text-align: center;
+      border-radius: 4px; display: none; z-index: 40; border: 1px solid rgba(255,255,255,0.2); text-align: center;
     }
 
     #fade-screen {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: #000; opacity: 0; pointer-events: none; z-index: 50; transition: opacity 1.2s ease;
+      background: #000; opacity: 0; pointer-events: none; z-index: 60; transition: opacity 1.2s ease;
     }
 
-    /* EFECTO DE PÁRPADOS (DESPERTAR) */
+    /* PÁRPADOS */
     .eyelid {
-      position: fixed; left: 0; width: 100vw; height: 50vh;
-      background: #000; z-index: 45; pointer-events: none;
-      transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      position: fixed; left: 0; width: 100vw; height: 0vh;
+      background: #000; z-index: 35; pointer-events: none;
+      transition: height 0.35s ease-in-out;
     }
     #eyelid-top { top: 0; }
     #eyelid-bottom { bottom: 0; }
@@ -104,7 +104,6 @@
 <div id="subtitles"></div>
 <div id="fade-screen"></div>
 
-<!-- Párpados animados -->
 <div id="eyelid-top" class="eyelid"></div>
 <div id="eyelid-bottom" class="eyelid"></div>
 
@@ -124,12 +123,10 @@
   let inCinematic = false;
   let flashlightOn = true;
 
-  // Secuencia de despertar
   let isWakingUp = false;
   let wakeAnimTime = 0;
-  const WAKE_DURATION = 5.0;
+  const WAKE_DURATION = 4.5;
 
-  // Objetos dinámicos
   let finalPortal, hazmatDoor, geigerTerminal, runTrigger, cityTarget, mirrorObject;
   let invisibleEntityPos = new THREE.Vector3(0, 0, 15);
   let redLightPulse = 0;
@@ -145,7 +142,7 @@
 
     controls = new THREE.PointerLockControls(camera, document.body);
 
-    ambientLight = new THREE.AmbientLight(0xffffff, 0.15);
+    ambientLight = new THREE.AmbientLight(0xffffff, 0.25);
     scene.add(ambientLight);
 
     flashlight = new THREE.SpotLight(0xffffff, 3.0, 20, Math.PI / 4, 0.3, 1);
@@ -176,24 +173,21 @@
     isWakingUp = true;
     wakeAnimTime = 0;
 
-    // Posición echado mirando arriba al techo
-    camera.position.set(0, 0.7, 5);
-    camera.rotation.set(Math.PI / 2.3, 0, 0);
+    // Vista inicial acostado mirando directo al techo sobre la camilla
+    camera.position.set(0, 0.75, 6);
+    camera.rotation.set(Math.PI / 2.2, 0, 0);
 
-    // Ojos cerrados al inicio
-    setEyelids(50);
+    // Parpadeos progresivos
+    setEyelids(50); 
+    setTimeout(() => setEyelids(20), 400);
+    setTimeout(() => setEyelids(48), 900);
+    setTimeout(() => setEyelids(10), 1500);
+    setTimeout(() => setEyelids(30), 2100);
+    setTimeout(() => setEyelids(0), 2700);
 
-    // Parpadeos pesados progresivos
-    setTimeout(() => setEyelids(35), 600);   // Primer entreabierto
-    setTimeout(() => setEyelids(50), 1100);  // Cierra de nuevo
-    setTimeout(() => setEyelids(20), 1800);  // Abre más
-    setTimeout(() => setEyelids(45), 2500);  // Cierra casi completo
-    setTimeout(() => setEyelids(0), 3300);   // Abre totalmente los ojos
-
-    // Finaliza la secuencia y transfiere el control
     setTimeout(() => {
       isWakingUp = false;
-      showSubtitle("¿Hola...? ¿Por qué el hospital está tan vacío?", 3500);
+      showSubtitle("¿Hola...? ¿Por qué la habitación está vacía?", 3500);
     }, WAKE_DURATION * 1000);
   }
 
@@ -228,7 +222,7 @@
     scene.add(camera);
     scene.add(ambientLight);
     ambientLight.color.setHex(0xffffff);
-    ambientLight.intensity = 0.15;
+    ambientLight.intensity = 0.25;
   }
 
   function transitionTo(nextChapterFunc) {
@@ -244,58 +238,97 @@
   // --- CAPÍTULO 1: HOSPITAL ---
   function loadChapter1() {
     clearScene(); chapter = 1;
-    scene.background = new THREE.Color(0x0a0a0f);
-    scene.fog = new THREE.FogExp2(0x0a0a0f, 0.05);
+    scene.background = new THREE.Color(0x0f172a);
+    scene.fog = new THREE.FogExp2(0x0f172a, 0.04);
 
     document.getElementById('hud-info').textContent = "CAPÍTULO 1: Hospital Desierto";
     document.getElementById('hud-info').style.color = "#ef4444";
     document.getElementById('vhs-overlay').style.display = 'none';
     document.getElementById('vhs-cam-info').style.display = 'none';
 
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.6 });
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.5 });
     const floorMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.3 });
+    const ceilingMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.6 });
+    const sheetMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.9 }); // Sábana blanca
 
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(8, 50), floorMat);
-    floor.rotation.x = -Math.PI / 2; floor.position.set(0, 0, -15);
-    scene.add(floor);
+    // --- HABITACIÓN INICIAL DE HOSPITAL (Z: 2 a 8, X: -3.5 a 3.5) ---
+    const roomFloor = new THREE.Mesh(new THREE.PlaneGeometry(7, 6), floorMat);
+    roomFloor.rotation.x = -Math.PI / 2; roomFloor.position.set(0, 0, 5);
+    scene.add(roomFloor);
 
-    const wallL = new THREE.Mesh(new THREE.PlaneGeometry(50, 4), wallMat);
-    wallL.rotation.y = Math.PI / 2; wallL.position.set(-4, 2, -15);
-    scene.add(wallL);
+    const roomCeiling = new THREE.Mesh(new THREE.PlaneGeometry(7, 6), ceilingMat);
+    roomCeiling.rotation.x = Math.PI / 2; roomCeiling.position.set(0, 4, 5);
+    scene.add(roomCeiling);
 
-    const wallR = new THREE.Mesh(new THREE.PlaneGeometry(50, 4), wallMat);
-    wallR.rotation.y = -Math.PI / 2; wallR.position.set(4, 2, -15);
-    scene.add(wallR);
+    // Pared trasera
+    const backWall = new THREE.Mesh(new THREE.PlaneGeometry(7, 4), wallMat);
+    backWall.position.set(0, 2, 8); backWall.rotation.y = Math.PI;
+    scene.add(backWall);
 
-    // Camilla de hospital
-    const bedFrameMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.6 });
-    const mattressMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.8 });
-    const bedFrame = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.4, 2.6), bedFrameMat);
-    bedFrame.position.set(0, 0.2, 5);
+    // Paredes laterales de la habitación
+    const leftWallRoom = new THREE.Mesh(new THREE.PlaneGeometry(6, 4), wallMat);
+    leftWallRoom.position.set(-3.5, 2, 5); leftWallRoom.rotation.y = Math.PI / 2;
+    scene.add(leftWallRoom);
+
+    const rightWallRoom = new THREE.Mesh(new THREE.PlaneGeometry(6, 4), wallMat);
+    rightWallRoom.position.set(3.5, 2, 5); rightWallRoom.rotation.y = -Math.PI / 2;
+    scene.add(rightWallRoom);
+
+    // Pared frontal con Marco de Puerta hacia el pasillo (Z = 2)
+    const frontWallL = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 4), wallMat);
+    frontWallL.position.set(-2.25, 2, 2); scene.add(frontWallL);
+
+    const frontWallR = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 4), wallMat);
+    frontWallR.position.set(2.25, 2, 2); scene.add(frontWallR);
+
+    const doorTop = new THREE.Mesh(new THREE.PlaneGeometry(2, 1.2), wallMat);
+    doorTop.position.set(0, 3.4, 2); scene.add(doorTop);
+
+    // --- PASILLO EXTERIOR DEL HOSPITAL (Z: 2 a -35) ---
+    const corridorFloor = new THREE.Mesh(new THREE.PlaneGeometry(6, 37), floorMat);
+    corridorFloor.rotation.x = -Math.PI / 2; corridorFloor.position.set(0, 0, -16.5);
+    scene.add(corridorFloor);
+
+    const corridorCeiling = new THREE.Mesh(new THREE.PlaneGeometry(6, 37), ceilingMat);
+    corridorCeiling.rotation.x = Math.PI / 2; corridorCeiling.position.set(0, 4, -16.5);
+    scene.add(corridorCeiling);
+
+    const corridorWallL = new THREE.Mesh(new THREE.PlaneGeometry(37, 4), wallMat);
+    corridorWallL.position.set(-3, 2, -16.5); corridorWallL.rotation.y = Math.PI / 2;
+    scene.add(corridorWallL);
+
+    const corridorWallR = new THREE.Mesh(new THREE.PlaneGeometry(37, 4), wallMat);
+    corridorWallR.position.set(3, 2, -16.5); corridorWallR.rotation.y = -Math.PI / 2;
+    scene.add(corridorWallR);
+
+    // --- CAMILLA DE HOSPITAL Y SÁBANAS ---
+    const bedFrame = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.4, 2.6), new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.6 }));
+    bedFrame.position.set(0, 0.2, 6);
     scene.add(bedFrame);
 
-    const mattress = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.25, 2.5), mattressMat);
-    mattress.position.set(0, 0.5, 5);
+    const mattress = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.25, 2.5), sheetMat);
+    mattress.position.set(0, 0.45, 6);
     scene.add(mattress);
 
-    // Lámpara de techo sobre la camilla
-    const ceilingLamp = new THREE.Mesh(
-      new THREE.BoxGeometry(1.2, 0.1, 0.6),
-      new THREE.MeshBasicMaterial({ color: 0xfef08a })
-    );
-    ceilingLamp.position.set(0, 3.9, 5);
+    const pillow = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.15, 0.5), sheetMat);
+    pillow.position.set(0, 0.6, 7.0);
+    scene.add(pillow);
+
+    // Lámpara incandescente sobre la camilla
+    const ceilingLamp = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.1, 0.6), new THREE.MeshBasicMaterial({ color: 0xfffbebe }));
+    ceilingLamp.position.set(0, 3.9, 6);
     scene.add(ceilingLamp);
 
-    const bedLight = new THREE.PointLight(0xfef08a, 1.8, 8);
-    bedLight.position.set(0, 3.7, 5);
+    const bedLight = new THREE.PointLight(0xfef08a, 3.0, 10);
+    bedLight.position.set(0, 3.6, 6);
     scene.add(bedLight);
 
     finalPortal = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.15, 16, 50), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
-    finalPortal.position.set(0, 1.6, -35);
+    finalPortal.position.set(0, 1.6, -33);
     scene.add(finalPortal);
 
-    camera.position.set(0, 0.7, 5);
-    camera.rotation.set(Math.PI / 2.3, 0, 0);
+    camera.position.set(0, 0.75, 6);
+    camera.rotation.set(Math.PI / 2.2, 0, 0);
     invisibleEntityPos.set(0, 1.6, 18);
   }
 
@@ -325,7 +358,7 @@
 
     camera.position.set(0, 1.6, 3);
     camera.rotation.set(0,0,0);
-    showSubtitle("Agente Async: Ingrese al sector inferior. Hay alteraciones temporales.", 4000, "#22c55e");
+    showSubtitle("Agente Async: Ingrese al sector inferior. Hay alterations temporales.", 4000, "#22c55e");
   }
 
   // --- CAPÍTULO 3: LABORATORIO & GEIGER ---
@@ -432,7 +465,7 @@
     scene.background = new THREE.Color(0x000000);
     scene.fog = new THREE.FogExp2(0x000000, 0.04);
 
-    document.getElementById('hud-info').textContent = "CAPÍTULO 6: La Convergencia (Bucle)";
+    document.getElementById('hud-info').textContent = "CAPÍTULO 6: La ConverGencia (Bucle)";
     document.getElementById('hud-info').style.color = "#f43f5e";
 
     const roomMat = new THREE.MeshStandardMaterial({ color: 0x3f3f46, metalness: 0.5, roughness: 0.2 });
@@ -472,22 +505,32 @@
     const time = performance.now();
     const delta = (time - prevTime) / 1000;
 
-    // Animación de incorporación al despertar
     if (isWakingUp) {
       wakeAnimTime += delta;
       
-      // La cámara se levanta progresivamente entre el segundo 1.5 y 4.5
-      let riseProgress = Math.max(0, (wakeAnimTime - 1.5) / 3.0);
-      riseProgress = Math.min(1.0, riseProgress);
-      
-      const ease = riseProgress < 0.5 ? 2 * riseProgress * riseProgress : 1 - Math.pow(-2 * riseProgress + 2, 2) / 2;
+      // FASE 1 (0 a 2s): Acostado en la cama mirando el techo
+      if (wakeAnimTime < 2.0) {
+        camera.position.set(0, 0.75, 6);
+        camera.rotation.set(Math.PI / 2.2, 0, 0);
+      }
+      // FASE 2 (2s a 3.5s): Sentarse en el borde de la camilla mirando la habitación
+      else if (wakeAnimTime < 3.5) {
+        let t = (wakeAnimTime - 2.0) / 1.5;
+        let ease = t * t * (3 - 2 * t); // Easing suave
 
-      // Se eleva la altura del personaje de 0.7m (echado) a 1.6m (de pie)
-      camera.position.y = THREE.MathUtils.lerp(0.7, 1.6, ease);
-      // Inclina la vista desde el techo (Math.PI/2.3) hasta la vista horizontal (0)
-      camera.rotation.x = THREE.MathUtils.lerp(Math.PI / 2.3, 0, ease);
-      camera.rotation.y = 0;
-      camera.rotation.z = 0;
+        camera.position.y = THREE.MathUtils.lerp(0.75, 1.25, ease);
+        camera.position.z = THREE.MathUtils.lerp(6, 5.5, ease);
+        camera.rotation.x = THREE.MathUtils.lerp(Math.PI / 2.2, -0.1, ease); // Se sienta y mira hacia el frente/puerta
+      }
+      // FASE 3 (3.5s a 4.5s): Ponerse de pie completamente
+      else {
+        let t = (wakeAnimTime - 3.5) / 1.0;
+        let ease = t * t * (3 - 2 * t);
+
+        camera.position.y = THREE.MathUtils.lerp(1.25, 1.6, ease);
+        camera.position.z = THREE.MathUtils.lerp(5.5, 5.0, ease);
+        camera.rotation.x = THREE.MathUtils.lerp(-0.1, 0, ease);
+      }
     }
     else if (controls.isLocked && !inCinematic) {
       let speedMult = (chapter === 4) ? 36.0 : 20.0; 
