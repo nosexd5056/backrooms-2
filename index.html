@@ -131,6 +131,12 @@
   let invisibleEntityPos = new THREE.Vector3(0, 0, 15);
   let redLightPulse = 0;
 
+  // Puntos clave de la mirada durante el despertar
+  const startLook = new THREE.Vector3(0, 3.9, 6.01);
+  const midLook = new THREE.Vector3(0, 1.2, 2.0);
+  const endLook = new THREE.Vector3(0, 1.6, -5.0);
+  const currentLook = new THREE.Vector3();
+
   function init() {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
@@ -173,11 +179,9 @@
     isWakingUp = true;
     wakeAnimTime = 0;
 
-    // Vista inicial acostado mirando directo al techo sobre la camilla
-    camera.position.set(0, 0.75, 6);
-    camera.rotation.set(Math.PI / 2.2, 0, 0);
+    camera.position.set(0, 0.7, 6.2);
+    camera.lookAt(startLook);
 
-    // Parpadeos progresivos
     setEyelids(50); 
     setTimeout(() => setEyelids(20), 400);
     setTimeout(() => setEyelids(48), 900);
@@ -249,9 +253,9 @@
     const wallMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.5 });
     const floorMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.3 });
     const ceilingMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.6 });
-    const sheetMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.9 }); // Sábana blanca
+    const sheetMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.9 });
 
-    // --- HABITACIÓN INICIAL DE HOSPITAL (Z: 2 a 8, X: -3.5 a 3.5) ---
+    // Habitación inicial
     const roomFloor = new THREE.Mesh(new THREE.PlaneGeometry(7, 6), floorMat);
     roomFloor.rotation.x = -Math.PI / 2; roomFloor.position.set(0, 0, 5);
     scene.add(roomFloor);
@@ -260,12 +264,10 @@
     roomCeiling.rotation.x = Math.PI / 2; roomCeiling.position.set(0, 4, 5);
     scene.add(roomCeiling);
 
-    // Pared trasera
     const backWall = new THREE.Mesh(new THREE.PlaneGeometry(7, 4), wallMat);
     backWall.position.set(0, 2, 8); backWall.rotation.y = Math.PI;
     scene.add(backWall);
 
-    // Paredes laterales de la habitación
     const leftWallRoom = new THREE.Mesh(new THREE.PlaneGeometry(6, 4), wallMat);
     leftWallRoom.position.set(-3.5, 2, 5); leftWallRoom.rotation.y = Math.PI / 2;
     scene.add(leftWallRoom);
@@ -274,7 +276,6 @@
     rightWallRoom.position.set(3.5, 2, 5); rightWallRoom.rotation.y = -Math.PI / 2;
     scene.add(rightWallRoom);
 
-    // Pared frontal con Marco de Puerta hacia el pasillo (Z = 2)
     const frontWallL = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 4), wallMat);
     frontWallL.position.set(-2.25, 2, 2); scene.add(frontWallL);
 
@@ -284,7 +285,7 @@
     const doorTop = new THREE.Mesh(new THREE.PlaneGeometry(2, 1.2), wallMat);
     doorTop.position.set(0, 3.4, 2); scene.add(doorTop);
 
-    // --- PASILLO EXTERIOR DEL HOSPITAL (Z: 2 a -35) ---
+    // Pasillo
     const corridorFloor = new THREE.Mesh(new THREE.PlaneGeometry(6, 37), floorMat);
     corridorFloor.rotation.x = -Math.PI / 2; corridorFloor.position.set(0, 0, -16.5);
     scene.add(corridorFloor);
@@ -301,7 +302,7 @@
     corridorWallR.position.set(3, 2, -16.5); corridorWallR.rotation.y = -Math.PI / 2;
     scene.add(corridorWallR);
 
-    // --- CAMILLA DE HOSPITAL Y SÁBANAS ---
+    // Camilla
     const bedFrame = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.4, 2.6), new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.6 }));
     bedFrame.position.set(0, 0.2, 6);
     scene.add(bedFrame);
@@ -314,7 +315,6 @@
     pillow.position.set(0, 0.6, 7.0);
     scene.add(pillow);
 
-    // Lámpara incandescente sobre la camilla
     const ceilingLamp = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.1, 0.6), new THREE.MeshBasicMaterial({ color: 0xfffbebe }));
     ceilingLamp.position.set(0, 3.9, 6);
     scene.add(ceilingLamp);
@@ -327,12 +327,12 @@
     finalPortal.position.set(0, 1.6, -33);
     scene.add(finalPortal);
 
-    camera.position.set(0, 0.75, 6);
-    camera.rotation.set(Math.PI / 2.2, 0, 0);
+    camera.position.set(0, 0.7, 6.2);
+    camera.lookAt(startLook);
     invisibleEntityPos.set(0, 1.6, 18);
   }
 
-  // --- CAPÍTULO 2: INVESTIGADOR / LOBBY VHS ---
+  // --- CAPÍTULO 2 ---
   function loadChapter2() {
     clearScene(); chapter = 2;
     scene.background = new THREE.Color(0x1c1917);
@@ -358,10 +358,10 @@
 
     camera.position.set(0, 1.6, 3);
     camera.rotation.set(0,0,0);
-    showSubtitle("Agente Async: Ingrese al sector inferior. Hay alterations temporales.", 4000, "#22c55e");
+    showSubtitle("Agente Async: Ingrese al sector inferior. Hay alteraciones temporales.", 4000, "#22c55e");
   }
 
-  // --- CAPÍTULO 3: LABORATORIO & GEIGER ---
+  // --- CAPÍTULO 3 ---
   function loadChapter3() {
     clearScene(); chapter = 3;
     scene.background = new THREE.Color(0x020617);
@@ -384,7 +384,7 @@
     showSubtitle("Usa el detector Geiger. Encuentra la terminal de la brecha.", 4000, "#facc15");
   }
 
-  // --- CAPÍTULO 4: NIVEL ¡CORRE! ---
+  // --- CAPÍTULO 4 ---
   function loadChapter4() {
     clearScene(); chapter = 4;
     document.getElementById('geiger-hud').style.display = 'none';
@@ -420,7 +420,7 @@
     showSubtitle("¡ALARMA DE CONTENCIÓN! ¡CORRE HACIA EL FONDO DEL PASILLO!", 4000, "#ef4444");
   }
 
-  // --- CAPÍTULO 5: LA CIUDAD DESIERTA ---
+  // --- CAPÍTULO 5 ---
   function loadChapter5() {
     clearScene(); chapter = 5;
     scene.background = new THREE.Color(0x030712);
@@ -459,13 +459,13 @@
     showSubtitle("Camina recto hacia el pilar de luz dorada al fondo.", 5000, "#f59e0b");
   }
 
-  // --- CAPÍTULO 6: LA CONVERGENCIA ---
+  // --- CAPÍTULO 6 ---
   function loadChapter6() {
     clearScene(); chapter = 6;
     scene.background = new THREE.Color(0x000000);
     scene.fog = new THREE.FogExp2(0x000000, 0.04);
 
-    document.getElementById('hud-info').textContent = "CAPÍTULO 6: La ConverGencia (Bucle)";
+    document.getElementById('hud-info').textContent = "CAPÍTULO 6: La Convergencia (Bucle)";
     document.getElementById('hud-info').style.color = "#f43f5e";
 
     const roomMat = new THREE.MeshStandardMaterial({ color: 0x3f3f46, metalness: 0.5, roughness: 0.2 });
@@ -482,7 +482,6 @@
     showSubtitle("Investigador y Paciente... siempre fueron la misma persona en el bucle.", 6000, "#f43f5e");
   }
 
-  // --- INTERACCIONES ---
   function interact() {
     if (chapter === 2 && camera.position.distanceTo(hazmatDoor.position) < 3.5) {
       transitionTo(loadChapter3);
@@ -508,29 +507,28 @@
     if (isWakingUp) {
       wakeAnimTime += delta;
       
-      // FASE 1 (0 a 2s): Acostado en la cama mirando el techo
       if (wakeAnimTime < 2.0) {
-        camera.position.set(0, 0.75, 6);
-        camera.rotation.set(Math.PI / 2.2, 0, 0);
+        camera.position.set(0, 0.7, 6.2);
+        currentLook.copy(startLook);
       }
-      // FASE 2 (2s a 3.5s): Sentarse en el borde de la camilla mirando la habitación
       else if (wakeAnimTime < 3.5) {
         let t = (wakeAnimTime - 2.0) / 1.5;
-        let ease = t * t * (3 - 2 * t); // Easing suave
+        let ease = t * t * (3 - 2 * t);
 
-        camera.position.y = THREE.MathUtils.lerp(0.75, 1.25, ease);
-        camera.position.z = THREE.MathUtils.lerp(6, 5.5, ease);
-        camera.rotation.x = THREE.MathUtils.lerp(Math.PI / 2.2, -0.1, ease); // Se sienta y mira hacia el frente/puerta
+        camera.position.y = THREE.MathUtils.lerp(0.7, 1.25, ease);
+        camera.position.z = THREE.MathUtils.lerp(6.2, 5.5, ease);
+        currentLook.lerpVectors(startLook, midLook, ease);
       }
-      // FASE 3 (3.5s a 4.5s): Ponerse de pie completamente
       else {
         let t = (wakeAnimTime - 3.5) / 1.0;
         let ease = t * t * (3 - 2 * t);
 
         camera.position.y = THREE.MathUtils.lerp(1.25, 1.6, ease);
         camera.position.z = THREE.MathUtils.lerp(5.5, 5.0, ease);
-        camera.rotation.x = THREE.MathUtils.lerp(-0.1, 0, ease);
+        currentLook.lerpVectors(midLook, endLook, ease);
       }
+
+      camera.lookAt(currentLook);
     }
     else if (controls.isLocked && !inCinematic) {
       let speedMult = (chapter === 4) ? 36.0 : 20.0; 
