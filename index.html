@@ -280,12 +280,11 @@
     showSubtitle("Usa el detector Geiger. Encuentra la terminal de la brecha.", 4000, "#facc15");
   }
 
-  // --- CAPÍTULO 4: NIVEL ¡CORRE! (Ajustada la visibilidad) ---
+  // --- CAPÍTULO 4: NIVEL ¡CORRE! ---
   function loadChapter4() {
     clearScene(); chapter = 4;
     document.getElementById('geiger-hud').style.display = 'none';
     
-    // Iluminación ambiental roja visible sin oscurecer a negro
     ambientLight.color.setHex(0xff2222);
     ambientLight.intensity = 0.4;
 
@@ -295,7 +294,6 @@
     document.getElementById('hud-info').textContent = "CAPÍTULO 4: ¡CORRE! (Level !)";
     document.getElementById('hud-info').style.color = "#dc2626";
 
-    // Texturas claras para ver paredes
     const wallMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.5 });
     const floorMat = new THREE.MeshStandardMaterial({ color: 0x450a0a, roughness: 0.3 });
 
@@ -305,7 +303,6 @@
     corridor.position.set(0, 2, -35);
     scene.add(corridor);
 
-    // Luz roja de alarma en el techo
     emergencyRedLight = new THREE.PointLight(0xff0000, 4.0, 30);
     emergencyRedLight.position.set(0, 3.5, -20);
     scene.add(emergencyRedLight);
@@ -319,11 +316,11 @@
     showSubtitle("¡ALARMA DE CONTENCIÓN! ¡CORRE HACIA EL FONDO DEL PASILLO!", 4000, "#ef4444");
   }
 
-  // --- CAPÍTULO 5: LA CIUDAD DESIERTA ---
+  // --- CAPÍTULO 5: LA CIUDAD DESIERTA (Arreglado) ---
   function loadChapter5() {
     clearScene(); chapter = 5;
     scene.background = new THREE.Color(0x030712);
-    scene.fog = new THREE.FogExp2(0x030712, 0.02);
+    scene.fog = new THREE.FogExp2(0x030712, 0.015);
 
     document.getElementById('hud-info').textContent = "CAPÍTULO 5: La Ciudad Vacía (Nivel 11)";
     document.getElementById('hud-info').style.color = "#38bdf8";
@@ -332,19 +329,32 @@
     ground.rotation.x = -Math.PI / 2;
     scene.add(ground);
 
-    for(let i=0; i<25; i++) {
-      const b = new THREE.Mesh(new THREE.BoxGeometry(8 + Math.random()*6, 15 + Math.random()*20, 8 + Math.random()*6), new THREE.MeshStandardMaterial({ color: 0x374151 }));
-      b.position.set((Math.random()-0.5)*90, b.geometry.parameters.height/2, (Math.random()-0.5)*90);
+    // Edificios distribuidos despejando el callejón central
+    for(let i=0; i<30; i++) {
+      let x = (Math.random() - 0.5) * 90;
+      let z = (Math.random() - 0.5) * 90;
+      if (Math.abs(x) < 6) x += (x >= 0 ? 8 : -8);
+
+      const b = new THREE.Mesh(
+        new THREE.BoxGeometry(8 + Math.random()*4, 12 + Math.random()*15, 8 + Math.random()*4),
+        new THREE.MeshStandardMaterial({ color: 0x374151 })
+      );
+      b.position.set(x, b.geometry.parameters.height/2, z);
       scene.add(b);
     }
 
-    cityTarget = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 12, 16), new THREE.MeshBasicMaterial({ color: 0xf59e0b }));
-    cityTarget.position.set(0, 6, -40);
+    // Columna de luz gigante dorada visible desde lejos
+    cityTarget = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 40, 16), new THREE.MeshBasicMaterial({ color: 0xf59e0b }));
+    cityTarget.position.set(0, 20, -40);
     scene.add(cityTarget);
+
+    const beaconLight = new THREE.PointLight(0xf59e0b, 5, 50);
+    beaconLight.position.set(0, 3, -40);
+    scene.add(beaconLight);
 
     camera.position.set(0, 1.6, 30);
     camera.rotation.set(0,0,0);
-    showSubtitle("Una metrópolis desierta... Dirígete hacia la torre iluminada.", 4500, "#38bdf8");
+    showSubtitle("Camina recto hacia el pilar de luz dorada al fondo.", 5000, "#f59e0b");
   }
 
   // --- CAPÍTULO 6: LA CONVERGENCIA ---
@@ -409,7 +419,6 @@
       controls.moveRight(-velocity.x * delta);
       controls.moveForward(-velocity.z * delta);
 
-      // Lógica específica por capítulo
       if (chapter === 1) {
         invisibleEntityPos.z -= 1.2 * delta;
         const dist = camera.position.distanceTo(invisibleEntityPos);
@@ -430,7 +439,6 @@
         document.getElementById('interaction-hint').style.display = distToTerm < 3.5 ? 'block' : 'none';
       }
       else if (chapter === 4) {
-        // Parpadeo de la luz roja de emergencia
         redLightPulse += delta * 6;
         if (emergencyRedLight) {
           emergencyRedLight.intensity = 2.0 + Math.sin(redLightPulse) * 2.0;
@@ -441,7 +449,10 @@
         }
       }
       else if (chapter === 5) {
-        if (camera.position.distanceTo(cityTarget.position) < 4.0) {
+        // Medición en 2D (plano X/Z) para garantizar el contacto con la columna de luz
+        const playerPos2D = new THREE.Vector2(camera.position.x, camera.position.z);
+        const targetPos2D = new THREE.Vector2(cityTarget.position.x, cityTarget.position.z);
+        if (playerPos2D.distanceTo(targetPos2D) < 4.0) {
           transitionTo(loadChapter6);
         }
       }
